@@ -19,13 +19,22 @@
 
 using namespace std;
 
+/*
+ * Constructor.
+ */
+ParticleFilter::ParticleFilter() {
+  
+  num_particles = 100;
+  
+
+}
+
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
-        int n = 100; //number of particles to be initialized
 	default_random_engine gen;
 	 
 
@@ -36,7 +45,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	normal_distribution<double> dist_y(y, std[1]);
 	normal_distribution<double> dist_theta(theta, std[2]);
 
-	for (int i = 0; i < n; ++i) {
+	for (int i = 0; i < num_particles; ++i) {
 		double sample_x, sample_y, sample_theta, weight;
 		// sample particles from normal distributions
 		// where "gen" is the random engine initialized earlier.
@@ -44,6 +53,8 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		sample_y = dist_y(gen);
 		sample_theta = dist_theta(gen);	 
                 weight = 1;
+
+        is_initialized = true;
 
 }
 
