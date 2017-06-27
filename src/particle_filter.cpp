@@ -25,7 +25,8 @@ using namespace std;
 ParticleFilter::ParticleFilter() {
   
   num_particles = 100;
-  
+  sense_x(num_particles);
+  sense_y(num_particles);
 
 }
 
