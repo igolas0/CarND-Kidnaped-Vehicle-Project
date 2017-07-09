@@ -25,8 +25,7 @@ using namespace std;
 ParticleFilter::ParticleFilter() {
   
   num_particles = 100;
-  sense_x(num_particles);
-  sense_y(num_particles);
+  particles(num_particles);
 
 }
 
@@ -47,13 +46,13 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	normal_distribution<double> dist_theta(theta, std[2]);
 
 	for (int i = 0; i < num_particles; ++i) {
-		double sample_x, sample_y, sample_theta, weight;
 		// sample particles from normal distributions
 		// where "gen" is the random engine initialized earlier.
-		sample_x = dist_x(gen);
-		sample_y = dist_y(gen);
-		sample_theta = dist_theta(gen);	 
-                weight = 1;
+                particle[i].id = i;
+		particle[i].x = dist_x(gen);
+		particle[i].y = dist_y(gen);
+		particle[i].theta = dist_theta(gen);	 
+                particle[i].weight = 1.0;
 
         is_initialized = true;
 
@@ -64,6 +63,36 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
+        
+	default_random_engine gen;
+
+	// This line creates a normal (Gaussian) distribution for the veloxity
+	normal_distribution<double> dist_x(0, std_pos[0]);
+	
+	// Create normal distributions for y and psi
+	normal_distribution<double> dist_y(0, std[1]);
+	normal_distribution<double> dist_theta(0, std[2]);
+
+        if yaw_rate==0 {
+            
+	   for (int i = 0; i < num_particles; ++i) {
+		// sample particles from normal distributions
+		// where "gen" is the random engine initialized earlier.
+		particle[i].x += velocity * delta_t * cos(particle[i].theta) + dist_x(gen);
+		particle[i].y += velocity * delta_t * sin(particle[i].theta) + dist_y(gen);
+                particle[i].theta += dist_theta(gen);
+        }   
+
+
+        else {
+            
+	   for (int i = 0; i < num_particles; ++i) {
+		// sample particles from normal distributions
+		// where "gen" is the random engine initialized earlier.
+		particle[i].x += velocity/yaw_rate * (sin(particle[i].theta + yaw_rate * delta_t) - sin(particle[i].theta)) + dist_x(gen);
+		particle[i].y += velocity/yaw_rate * (cos(particle[i].theta) - cos(particle[i].theta + yaw_rate * delta_t)) + dist_y(gen);
+                particle[i].theta += dist_theta(gen);
+        }   
 
 }
 
