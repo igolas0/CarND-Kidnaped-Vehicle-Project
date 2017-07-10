@@ -116,6 +116,31 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+
+	for (int i = 0; i < num_particles; i++) {
+               
+            vector<LandmarkObs> predicted(observations.size());       
+
+            for (int i = 0; i<observations.size(); ++i) { 
+
+               LandmarkObs obs;
+               //set obj.x and obj.y
+               predicted.push_back(obs);
+            }
+
+            dataAssociation(predicted, map_landmarks);
+
+            particle[i]=0;
+
+            for (int j = 0; j<predicted.size(); ++i) { 
+
+            particle[i].weight *= 1/(2*M_PI*std_landmark[0]*std_landmark[1]) * exp(-(pow(predicted[j].obs.x - map_landmarks[predicted[j].obs.id - 1].x_f, 2) 
+                                                                                     + pow(predicted[j].obs.y - map_landmarks[predicted[j].obs.id - 1].y_f, 2))
+                                                                                     /(2 * M_PI *std_landmark[0]*std_landmark[1]));
+
+
+            }
+        }
 }
 
 void ParticleFilter::resample() {
