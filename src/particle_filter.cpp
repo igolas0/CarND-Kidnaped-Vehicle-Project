@@ -119,24 +119,47 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 	for (int i = 0; i < num_particles; i++) {
                
-            vector<LandmarkObs> predicted(observations.size());       
-
-            for (int i = 0; i<observations.size(); ++i) { 
-
-               LandmarkObs obs;
-               //set obj.x and obj.y
-               predicted.push_back(obs);
-            }
-
-            dataAssociation(predicted, map_landmarks);
+            //vector<LandmarkObs> predicted(observations.size());       
 
             particle[i]=0;
 
-            for (int j = 0; j<predicted.size(); ++i) { 
+            for (int j = 0; j<observations.size(); ++j) { 
 
-            particle[i].weight *= 1/(2*M_PI*std_landmark[0]*std_landmark[1]) * exp(-(pow(predicted[j].obs.x - map_landmarks[predicted[j].obs.id - 1].x_f, 2) 
-                                                                                     + pow(predicted[j].obs.y - map_landmarks[predicted[j].obs.id - 1].y_f, 2))
-                                                                                     /(2 * M_PI *std_landmark[0]*std_landmark[1]));
+               //LandmarkObs obs;
+               //set obj.x and obj.y
+               //predicted.push_back(obs);
+               
+
+               //--> set x and y transformation
+               //---> assign MAP ID (and then compute particle weight)
+               double x_trans = particle[i].x + observations[j].x * cos(particle[i].theta) - observations[j].y * sin(particle[i].theta);
+               double y_trans = particle[i].y + observations[j].x * sin(particle[i].theta) + observations[j].y * cos(particle[i].theta);
+
+
+               int best_map_id = 0;
+               double best_dist = dist(x_trans, y_trans, map_landmarks[0].x_f, map_landmarks[0].y_f]
+
+               for (int x = 1; x<map_landmarks.size(); ++x) {
+
+                   double new_dist = dist(x_trans, y_trans, map_landmarks[x].x_f, map_landmarks[x].y_f]
+
+                   if (new_dist < best_dist) {
+
+                   best_dist = new_dist
+                   best_map_id = x;
+
+                   }
+
+               }
+               particle[i].weight *= 1/(2*M_PI*std_landmark[0]*std_landmark[1]) * exp(-(pow(predicted[j].obs.x - map_landmarks[predicted[j].obs.id - 1].x_f, 2) 
+                                                                                       + pow(predicted[j].obs.y - map_landmarks[predicted[j].obs.id - 1].y_f, 2))
+                                                                                        /(2 * M_PI *std_landmark[0]*std_landmark[1]));
+
+            }
+
+            //particle[i].weight *= 1/(2*M_PI*std_landmark[0]*std_landmark[1]) * exp(-(pow(predicted[j].obs.x - map_landmarks[predicted[j].obs.id - 1].x_f, 2) 
+            //                                                                         + pow(predicted[j].obs.y - map_landmarks[predicted[j].obs.id - 1].y_f, 2))
+            //                                                                         /(2 * M_PI *std_landmark[0]*std_landmark[1]));
 
 
             }
