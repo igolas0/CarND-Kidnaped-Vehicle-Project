@@ -121,7 +121,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                
             //vector<LandmarkObs> predicted(observations.size());       
 
-            particle[i]=0;
+            //particle[i]=0;
 
             for (int j = 0; j<observations.size(); ++j) { 
 
@@ -135,8 +135,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                double x_trans = particle[i].x + observations[j].x * cos(particle[i].theta) - observations[j].y * sin(particle[i].theta);
                double y_trans = particle[i].y + observations[j].x * sin(particle[i].theta) + observations[j].y * cos(particle[i].theta);
 
-
-               int best_map_id = 0;
+               //using particle.id variable to associate to (nearest) map landmark
+               particle[i].id = 0;
                double best_dist = dist(x_trans, y_trans, map_landmarks[0].x_f, map_landmarks[0].y_f]
 
                for (int x = 1; x<map_landmarks.size(); ++x) {
@@ -146,7 +146,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                    if (new_dist < best_dist) {
 
                    best_dist = new_dist
-                   best_map_id = x;
+                   particle[i].id = x;
 
                    }
 
