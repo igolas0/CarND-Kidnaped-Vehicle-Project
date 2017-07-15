@@ -24,9 +24,10 @@ using namespace std;
  */
 ParticleFilter::ParticleFilter() {
   
-  num_particles = 100;
+  //num_particles = 100;
   particles(num_particles);
-
+  particles2(num_particles);
+  weights(num_particles);
 }
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
@@ -48,11 +49,11 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	for (int i = 0; i < num_particles; ++i) {
 		// sample particles from normal distributions
 		// where "gen" is the random engine initialized earlier.
-                particle[i].id = i;
-		particle[i].x = dist_x(gen);
-		particle[i].y = dist_y(gen);
-		particle[i].theta = dist_theta(gen);	 
-                particle[i].weight = 1.0;
+                particles[i].id = i;
+		particles[i].x = dist_x(gen);
+		particles[i].y = dist_y(gen);
+		particles[i].theta = dist_theta(gen);	 
+                particles[i].weight = 1.0;
 
         is_initialized = true;
 
@@ -78,9 +79,9 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	   for (int i = 0; i < num_particles; ++i) {
 		// sample particles from normal distributions
 		// where "gen" is the random engine initialized earlier.
-		particle[i].x += velocity * delta_t * cos(particle[i].theta) + dist_x(gen);
-		particle[i].y += velocity * delta_t * sin(particle[i].theta) + dist_y(gen);
-                particle[i].theta += dist_theta(gen);
+		particles[i].x += velocity * delta_t * cos(particles[i].theta) + dist_x(gen);
+		particles[i].y += velocity * delta_t * sin(particles[i].theta) + dist_y(gen);
+                particles[i].theta += dist_theta(gen);
         }   
 
 
@@ -89,9 +90,9 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	   for (int i = 0; i < num_particles; ++i) {
 		// sample particles from normal distributions
 		// where "gen" is the random engine initialized earlier.
-		particle[i].x += velocity/yaw_rate * (sin(particle[i].theta + yaw_rate * delta_t) - sin(particle[i].theta)) + dist_x(gen);
-		particle[i].y += velocity/yaw_rate * (cos(particle[i].theta) - cos(particle[i].theta + yaw_rate * delta_t)) + dist_y(gen);
-                particle[i].theta += dist_theta(gen);
+		particles[i].x += velocity/yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta)) + dist_x(gen);
+		particles[i].y += velocity/yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t)) + dist_y(gen);
+                particles[i].theta += dist_theta(gen);
         }   
 
 }
@@ -120,17 +121,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	for (int i = 0; i < num_particles; i++) {
                
 
-            particle[i].weight=1.0;
+            particles[i].weight=1.0;
 
             for (int j = 0; j<observations.size(); ++j) { 
                
 
                //set x and y transformation for each observation to get global coordinates
-               double x_trans = particle[i].x + observations[j].x * cos(particle[i].theta) - observations[j].y * sin(particle[i].theta);
-               double y_trans = particle[i].y + observations[j].x * sin(particle[i].theta) + observations[j].y * cos(particle[i].theta);
+               double x_trans = particles[i].x + observations[j].x * cos(particles[i].theta) - observations[j].y * sin(particles[i].theta);
+               double y_trans = particles[i].y + observations[j].x * sin(particles[i].theta) + observations[j].y * cos(particles[i].theta);
 
                //using particle.id variable to associate to (nearest) map landmark
-               particle[i].id = 0;
+               particles[i].id = 0;
                double best_dist = dist(x_trans, y_trans, map_landmarks[0].x_f, map_landmarks[0].y_f]
 
                //search over all map landmarks to find closest/nearest to observation
@@ -142,14 +143,14 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
                    best_dist = new_dist
                    //assign landmark ID corresponding to nearest landmark
-                   particle[i].id = x;
+                   particles[i].id = x;
 
                    }
 
                }
                //compute particle weight based on multivariate Gaussian probability
-               particle[i].weight *= 1/(2*M_PI*std_landmark[0]*std_landmark[1]) * exp(-(pow(x_trans - map_landmarks[particle[i].id].x_f, 2) 
-                                                                                      + pow(y_trans - map_landmarks[particle[i].id].y_f, 2))
+               particles[i].weight *= 1/(2*M_PI*std_landmark[0]*std_landmark[1]) * exp(-(pow(x_trans - map_landmarks[particles[i].id].x_f, 2) 
+                                                                                      + pow(y_trans - map_landmarks[particles[i].id].y_f, 2))
                                                                                         /(2 * M_PI *std_landmark[0]*std_landmark[1]));
 
             }
@@ -160,24 +161,35 @@ void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight. 
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+
+	for (int i = 0; i < num_particles; i++) {
+
+          weights[i] = particles[i].weight;
+      
+        }
+        //calculate max value in weights vector
+        double mw = *max_element(begin(weights), std::end(weights));           
+
         default_random_engine gen;
 
         uniform_int_distribution <int> dist_n(0,num_particles);
-
-        discrete_distribution <double> dist_w //complete
+        uniform_real_distribution <double> dist_mw(0.0, 2*mw);
 
         int index = dist_n(gen);
         double beta = 0.0;
 
-        for (int i=0; i < num_particles; i++) {
+        for (int i=0; i < num_particles; ++i) {
 
-           beta += //complete
+           beta += dist_mw(gen);
            
-           while (beta > /* comp*/ ) {
+           while (beta > weights[index]) {
 
-             beta -= // complete
+             beta -= weights[index];
+             index = (index + 1)%num_particles;
            }
+        particles2[i] = particles[index];
         }
+        particles = particles2;
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
