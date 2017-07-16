@@ -47,7 +47,7 @@ public:
 
 	// Constructor
 	// @param M Number of particles
-	ParticleFilter() : num_particles(100), is_initialized(false) {}
+	ParticleFilter() : num_particles(100), is_initialized(false), particles(100), particles2(100), weights(100) {}
 
 	// Destructor
 	~ParticleFilter() {}

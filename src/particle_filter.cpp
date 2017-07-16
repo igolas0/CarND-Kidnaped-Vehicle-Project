@@ -19,16 +19,7 @@
 
 using namespace std;
 
-/*
- * Constructor.
- */
-ParticleFilter::ParticleFilter() {
-  
-  //num_particles = 100;
-  particles(num_particles);
-  particles2(num_particles);
-  weights(num_particles);
-}
+
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
@@ -54,7 +45,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		particles[i].y = dist_y(gen);
 		particles[i].theta = dist_theta(gen);	 
                 particles[i].weight = 1.0;
-
+        }
         is_initialized = true;
 
 }
@@ -71,10 +62,10 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	normal_distribution<double> dist_x(0, std_pos[0]);
 	
 	// Create normal distributions for y and psi
-	normal_distribution<double> dist_y(0, std[1]);
-	normal_distribution<double> dist_theta(0, std[2]);
+	normal_distribution<double> dist_y(0, std_pos[1]);
+	normal_distribution<double> dist_theta(0, std_pos[2]);
 
-        if yaw_rate==0 {
+        if (yaw_rate==0) {
             
 	   for (int i = 0; i < num_particles; ++i) {
 		// sample particles from normal distributions
@@ -82,6 +73,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		particles[i].x += velocity * delta_t * cos(particles[i].theta) + dist_x(gen);
 		particles[i].y += velocity * delta_t * sin(particles[i].theta) + dist_y(gen);
                 particles[i].theta += dist_theta(gen);
+           }
         }   
 
 
@@ -93,6 +85,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		particles[i].x += velocity/yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta)) + dist_x(gen);
 		particles[i].y += velocity/yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t)) + dist_y(gen);
                 particles[i].theta += dist_theta(gen);
+           }
         }   
 
 }
@@ -132,25 +125,25 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
                //using particle.id variable to associate to (nearest) map landmark
                particles[i].id = 0;
-               double best_dist = dist(x_trans, y_trans, map_landmarks[0].x_f, map_landmarks[0].y_f]
+               double best_dist = dist(x_trans, y_trans, map_landmarks.landmark_list[0].x_f, map_landmarks.landmark_list[0].y_f);
 
                //search over all map landmarks to find closest/nearest to observation
-               for (int x = 1; x<map_landmarks.size(); ++x) {
+               for (int k = 1; k < map_landmarks.landmark_list.size(); ++k) {
 
-                   double new_dist = dist(x_trans, y_trans, map_landmarks[x].x_f, map_landmarks[x].y_f]
+                   double new_dist = dist(x_trans, y_trans, map_landmarks.landmark_list[k].x_f, map_landmarks.landmark_list[k].y_f);
 
                    if (new_dist < best_dist) {
 
-                   best_dist = new_dist
+                   best_dist = new_dist;
                    //assign landmark ID corresponding to nearest landmark
-                   particles[i].id = x;
+                   particles[i].id = k;
 
                    }
 
                }
                //compute particle weight based on multivariate Gaussian probability
-               particles[i].weight *= 1/(2*M_PI*std_landmark[0]*std_landmark[1]) * exp(-(pow(x_trans - map_landmarks[particles[i].id].x_f, 2) 
-                                                                                      + pow(y_trans - map_landmarks[particles[i].id].y_f, 2))
+               particles[i].weight *= 1/(2*M_PI*std_landmark[0]*std_landmark[1]) * exp(-(pow(x_trans - map_landmarks.landmark_list[particles[i].id].x_f, 2) 
+                                                                                      + pow(y_trans - map_landmarks.landmark_list[particles[i].id].y_f, 2))
                                                                                         /(2 * M_PI *std_landmark[0]*std_landmark[1]));
 
             }
