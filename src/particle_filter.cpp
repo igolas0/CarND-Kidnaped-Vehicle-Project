@@ -84,7 +84,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		// where "gen" is the random engine initialized earlier.
 		particles[i].x += velocity/yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta)) + dist_x(gen);
 		particles[i].y += velocity/yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t)) + dist_y(gen);
-                particles[i].theta += dist_theta(gen);
+                particles[i].theta += yaw_rate * delta_t + dist_theta(gen);
            }
         }   
 
@@ -146,7 +146,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                                                                       + pow(y_trans - map_landmarks.landmark_list[particles[i].id].y_f, 2))
                                                                                         /(2 * M_PI *std_landmark[0]*std_landmark[1]));
 
+
             }
+
+            weights[i] = particles[i].weight;
         }
 }
 
@@ -155,32 +158,16 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
-	for (int i = 0; i < num_particles; i++) {
-
-          weights[i] = particles[i].weight;
-      
-        }
-        //calculate max value in weights vector
-        double mw = *max_element(begin(weights), std::end(weights));           
 
         default_random_engine gen;
 
-        uniform_int_distribution <int> dist_n(0,num_particles);
-        uniform_real_distribution <double> dist_mw(0.0, 2*mw);
+        discrete_distribution<int> dist_d(weights.begin(), weights.end());
 
-        int index = dist_n(gen);
-        double beta = 0.0;
 
         for (int i=0; i < num_particles; ++i) {
 
-           beta += dist_mw(gen);
-           
-           while (beta > weights[index]) {
+           particles2[i] = particles[dist_d(gen)];
 
-             beta -= weights[index];
-             index = (index + 1)%num_particles;
-           }
-        particles2[i] = particles[index];
         }
         particles = particles2;
 }
